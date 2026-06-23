@@ -250,7 +250,7 @@ function updateFee() {
   if (selectedEvent === 'individual') fee = tournament.fee_individual;
   else if (selectedEvent === 'team') fee = tournament.fee_team;
   else fee = tournament.fee_individual + tournament.fee_team;
-  document.getElementById('feeDisplay').textContent = fee ? fee.toLocaleString() + '원' : '무료';
+  document.getElementById('feeDisplay').textContent = fee ? fee.toLocaleString() + '원' : '추후 공지';
 }
 
 function formatPhone(v) {
