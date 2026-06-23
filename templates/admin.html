@@ -249,6 +249,8 @@ tr:last-child td{border-bottom:none}
 
 <script>
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+let ANTHROPIC_KEY = '';
+fetch('/api/config').then(r=>r.json()).then(d=>{ANTHROPIC_KEY=d.apiKey});
 let currentTournament = null;
 let registrations = [];
 
