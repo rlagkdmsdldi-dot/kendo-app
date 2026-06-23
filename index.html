@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>완산제검도관 시합 신청</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f5f4f0;color:#1a1a1a;min-height:100vh}
+
+.hero{background:#1a1a1a;color:#fff;padding:2.5rem 1.25rem 2rem}
+.hero-eyebrow{font-size:11px;letter-spacing:.12em;color:#888;text-transform:uppercase;margin-bottom:.75rem}
+.hero-title{font-size:1.75rem;font-weight:700;line-height:1.2;margin-bottom:.5rem}
+.hero-sub{font-size:14px;color:#aaa;line-height:1.6}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#2a2a2a;border:1px solid #333;border-radius:6px;padding:6px 12px;font-size:12px;color:#ccc;margin-top:1rem}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0}
+
+.container{max-width:540px;margin:0 auto;padding:1.25rem}
+
+.card{background:#fff;border-radius:14px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e8e6e0}
+
+.section-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:1rem;font-weight:500}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.info-item{background:#f5f4f0;border-radius:8px;padding:.75rem}
+.info-item.full{grid-column:1/-1}
+.info-key{font-size:11px;color:#999;margin-bottom:3px}
+.info-val{font-size:14px;font-weight:500;color:#1a1a1a}
+
+.field{margin-bottom:.875rem}
+.field label{display:block;font-size:13px;color:#666;margin-bottom:5px;font-weight:500}
+.field input,.field select{
+  width:100%;padding:11px 13px;font-size:15px;
+  border:1.5px solid #e0ddd6;border-radius:9px;
+  background:#fff;color:#1a1a1a;
+  font-family:'Noto Sans KR',sans-serif;
+  transition:border-color .15s;outline:none;
+  -webkit-appearance:none;
+}
+.field input:focus,.field select:focus{border-color:#1a1a1a}
+
+.event-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+.event-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:.875rem .5rem;border:1.5px solid #e0ddd6;border-radius:10px;
+  cursor:pointer;background:#fff;text-align:center;transition:all .15s;
+}
+.event-btn:hover{border-color:#aaa}
+.event-btn.active{border-color:#1a1a1a;background:#1a1a1a;color:#fff}
+.event-btn .ev-icon{font-size:20px;margin-bottom:4px}
+.event-btn .ev-label{font-size:12px;font-weight:500}
+.event-btn .ev-sub{font-size:10px;color:#999;margin-top:1px}
+.event-btn.active .ev-sub{color:#888}
+
+.fee-display{
+  background:#f5f4f0;border-radius:10px;padding:1rem;
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:.875rem;
+}
+.fee-label{font-size:13px;color:#666}
+.fee-amount{font-size:18px;font-weight:700;color:#1a1a1a}
+
+.notice-box{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1rem;margin-top:.5rem}
+.notice-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:.5rem}
+.notice-item{font-size:13px;color:#78350f;padding:3px 0;padding-left:14px;position:relative;line-height:1.5}
+.notice-item::before{content:'·';position:absolute;left:4px}
+
+.btn-submit{
+  width:100%;padding:15px;
+  background:#1a1a1a;color:#fff;
+  border:none;border-radius:10px;
+  font-size:15px;font-weight:700;
+  font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;transition:opacity .15s;
+  letter-spacing:.02em;
+}
+.btn-submit:hover{opacity:.85}
+.btn-submit:disabled{opacity:.35;cursor:default}
+
+.success-card{
+  background:#f0fdf4;border:1.5px solid #86efac;
+  border-radius:14px;padding:1.5rem;text-align:center;display:none;
+}
+.success-icon{font-size:2.5rem;margin-bottom:.75rem}
+.success-title{font-size:17px;font-weight:700;color:#14532d;margin-bottom:.375rem}
+.success-sub{font-size:13px;color:#166534}
+
+.empty-state{text-align:center;padding:2.5rem 1rem;color:#aaa}
+.empty-icon{font-size:2rem;margin-bottom:.5rem}
+.empty-text{font-size:14px}
+
+.skeleton{background:#e8e6e0;border-radius:6px;height:16px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow">대한검도회 · 완산제검도관</div>
+  <div class="hero-title">시합 참가 신청</div>
+  <div class="hero-sub">아래 정보를 입력하고 신청 버튼을 눌러주세요</div>
+  <div class="hero-badge" id="heroBadge">
+    <div class="hero-dot"></div>
+    <span id="heroTournamentName">대회 정보 불러오는 중...</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="noTournament" class="empty-state" style="display:none">
+    <div class="empty-icon">🏆</div>
+    <div class="empty-text">현재 신청 가능한 대회가 없습니다<br>사범님께 문의해주세요</div>
+  </div>
+
+  <div id="mainForm">
+    <div class="card">
+      <div class="section-label">대회 정보</div>
+      <div class="info-grid" id="tournamentInfo">
+        <div class="info-item"><div class="skeleton" style="width:60%;height:12px;margin-bottom:6px"></div><div class="skeleton"></div></div>
+        <div class="info-item"><div class="skeleton" style="width:60%;height:12px;margin-bottom:6px"></div><div class="skeleton"></div></div>
+        <div class="info-item full"><div class="skeleton" style="width:60%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:80%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">참가자 정보</div>
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="f-name" placeholder="홍길동" maxlength="20">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="field">
+          <label>생년월일</label>
+          <input type="date" id="f-birth">
+        </div>
+        <div class="field">
+          <label>단 / 급</label>
+          <input type="text" id="f-rank" placeholder="3단 · 1급" maxlength="10">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>연락처</label>
+        <input type="tel" id="f-phone" placeholder="010-0000-0000" maxlength="13">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">출전 종목</div>
+      <div class="event-grid">
+        <button class="event-btn active" onclick="selectEvent('individual',this)">
+          <div class="ev-icon">🥋</div>
+          <div class="ev-label">개인전</div>
+          <div class="ev-sub">개인전만</div>
+        </button>
+        <button class="event-btn" onclick="selectEvent('team',this)">
+          <div class="ev-icon">🤝</div>
+          <div class="ev-label">단체전</div>
+          <div class="ev-sub">단체전만</div>
+        </button>
+        <button class="event-btn" onclick="selectEvent('both',this)">
+          <div class="ev-icon">⚔️</div>
+          <div class="ev-label">둘 다</div>
+          <div class="ev-sub">개인+단체</div>
+        </button>
+      </div>
+      <div class="fee-display">
+        <span class="fee-label">납부 참가비</span>
+        <span class="fee-amount" id="feeDisplay">-</span>
+      </div>
+      <div class="notice-box" id="noticeBox" style="display:none">
+        <div class="notice-title">⚠ 주의사항</div>
+        <div id="noticeList"></div>
+      </div>
+    </div>
+
+    <div id="successCard" class="success-card">
+      <div class="success-icon">✅</div>
+      <div class="success-title" id="successTitle"></div>
+      <div class="success-sub" id="successSub"></div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn" onclick="submitForm()">신청하기</button>
+    <div style="height:2rem"></div>
+  </div>
+
+</div>
+
+<script>
+let tournament = null;
+let selectedEvent = 'individual';
+
+const EVENT_LABELS = { individual:'개인전', team:'단체전', both:'개인전+단체전' };
+
+async function loadTournament() {
+  try {
+    const res = await fetch('/api/tournaments/active');
+    const data = await res.json();
+    if (!data) {
+      document.getElementById('mainForm').style.display = 'none';
+      document.getElementById('noTournament').style.display = 'block';
+      document.getElementById('heroTournamentName').textContent = '현재 신청 가능한 대회 없음';
+      return;
+    }
+    tournament = data;
+    tournament.notices = typeof data.notices === 'string' ? JSON.parse(data.notices) : (data.notices || []);
+    renderTournament();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderTournament() {
+  const t = tournament;
+  document.getElementById('heroTournamentName').textContent = t.name;
+  document.getElementById('tournamentInfo').innerHTML = `
+    <div class="info-item">
+      <div class="info-key">개최일</div>
+      <div class="info-val">${t.date || '-'}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">접수 마감</div>
+      <div class="info-val">${t.deadline || '-'}</div>
+    </div>
+    <div class="info-item full">
+      <div class="info-key">장소</div>
+      <div class="info-val">${t.place || '-'}</div>
+    </div>
+  `;
+  if (t.notices && t.notices.length) {
+    document.getElementById('noticeBox').style.display = 'block';
+    document.getElementById('noticeList').innerHTML = t.notices.map(n =>
+      `<div class="notice-item">${n}</div>`).join('');
+  }
+  updateFee();
+}
+
+function selectEvent(type, el) {
+  selectedEvent = type;
+  document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateFee();
+}
+
+function updateFee() {
+  if (!tournament) return;
+  let fee = 0;
+  if (selectedEvent === 'individual') fee = tournament.fee_individual;
+  else if (selectedEvent === 'team') fee = tournament.fee_team;
+  else fee = tournament.fee_individual + tournament.fee_team;
+  document.getElementById('feeDisplay').textContent = fee ? fee.toLocaleString() + '원' : '무료';
+}
+
+function formatPhone(v) {
+  v = v.replace(/\D/g,'');
+  if (v.length <= 3) return v;
+  if (v.length <= 7) return v.slice(0,3)+'-'+v.slice(3);
+  return v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+}
+
+document.getElementById('f-phone').addEventListener('input', function() {
+  const pos = this.selectionStart;
+  this.value = formatPhone(this.value);
+});
+
+async function submitForm() {
+  const name = document.getElementById('f-name').value.trim();
+  const birth = document.getElementById('f-birth').value;
+  const rank = document.getElementById('f-rank').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+
+  if (!name || !birth || !rank || !phone) {
+    alert('모든 항목을 입력해주세요');
+    return;
+  }
+  if (!tournament) { alert('대회 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '신청 중...';
+
+  try {
+    const res = await fetch('/api/registrations', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        tournament_id: tournament.id,
+        name, birth, rank, phone,
+        event_type: selectedEvent
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || '오류가 발생했습니다'); btn.disabled=false; btn.textContent='신청하기'; return; }
+
+    const sc = document.getElementById('successCard');
+    document.getElementById('successTitle').textContent = `${name}님, 신청 완료!`;
+    document.getElementById('successSub').textContent =
+      `${EVENT_LABELS[selectedEvent]} · 납부 금액 ${data.fee.toLocaleString()}원`;
+    sc.style.display = 'block';
+    btn.style.display = 'none';
+    ['f-name','f-birth','f-rank','f-phone'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) {
+    alert('네트워크 오류가 발생했습니다');
+    btn.disabled = false;
+    btn.textContent = '신청하기';
+  }
+}
+
+loadTournament();
+</script>
+</body>
+</html>
