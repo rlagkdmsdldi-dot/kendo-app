@@ -212,12 +212,26 @@ tr:last-child td{border-bottom:none}
     <div id="tab-setup" style="display:none">
       <div class="card">
         <div class="section-label">대회 요강 PDF로 자동 세팅</div>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfFile').click()">
-          <div style="font-size:24px;margin-bottom:8px">📄</div>
-          <div>PDF 파일을 클릭해서 선택하세요</div>
-          <div style="font-size:11px;margin-top:4px">대회명, 날짜, 장소, 참가비, 주의사항이 자동으로 입력됩니다</div>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <div class="upload-zone" onclick="document.getElementById('pdfFile1').click()" id="uploadZone1">
+            <div style="font-size:20px;margin-bottom:4px">📄</div>
+            <div>PDF 1 · 클릭해서 선택</div>
+          </div>
+          <div class="upload-zone" onclick="document.getElementById('pdfFile2').click()" id="uploadZone2">
+            <div style="font-size:20px;margin-bottom:4px">📄</div>
+            <div>PDF 2 · 클릭해서 선택 (선택사항)</div>
+          </div>
+          <div class="upload-zone" onclick="document.getElementById('pdfFile3').click()" id="uploadZone3">
+            <div style="font-size:20px;margin-bottom:4px">📄</div>
+            <div>PDF 3 · 클릭해서 선택 (선택사항)</div>
+          </div>
+          <textarea id="extraText" placeholder="본문 텍스트가 있으면 여기에 붙여넣기 (선택사항)" style="width:100%;padding:10px;border:1.5px dashed #e0ddd6;border-radius:10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;resize:vertical;min-height:80px;background:#fafaf8;outline:none"></textarea>
+          <button class="btn-sm" onclick="analyzeAll()" style="width:100%">✦ 분석 시작</button>
+          <div id="uploadZone" style="display:none"></div>
         </div>
-        <input type="file" id="pdfFile" accept=".pdf" style="display:none" multiple onchange="handlePDF(this)">
+        <input type="file" id="pdfFile1" accept=".pdf" style="display:none" onchange="markFile(this,'uploadZone1')">
+        <input type="file" id="pdfFile2" accept=".pdf" style="display:none" onchange="markFile(this,'uploadZone2')">
+        <input type="file" id="pdfFile3" accept=".pdf" style="display:none" onchange="markFile(this,'uploadZone3')">
         <div class="parsed-result" id="parsedResult"></div>
       </div>
 
@@ -368,6 +382,67 @@ async function saveTournament() {
 }
 
 // ── PDF 파싱 ──────────────────────────────────────────────
+
+function markFile(input, zoneId) {
+  const zone = document.getElementById(zoneId);
+  if (input.files[0]) {
+    zone.classList.add('has-file');
+    zone.innerHTML = `<div style="font-size:18px;margin-bottom:4px">✓</div><div style="font-weight:500">${input.files[0].name}</div>`;
+  }
+}
+
+async function analyzeAll() {
+  const files = ['pdfFile1','pdfFile2','pdfFile3'].map(id=>document.getElementById(id).files[0]).filter(Boolean);
+  const extraText = document.getElementById('extraText').value.trim();
+  if (!files.length && !extraText) { alert('PDF 또는 텍스트를 입력해주세요'); return; }
+  const zone = document.getElementById('uploadZone1');
+  zone.innerHTML = `<div style="font-size:20px;margin-bottom:4px">⏳</div><div>분석 중...</div>`;
+  const toBase64 = f => new Promise((res,rej) => {
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('읽기 실패'));
+    r.readAsDataURL(f);
+  });
+  const allBase64 = await Promise.all(files.map(toBase64));
+  const docContents = allBase64.map(b => ({type:'document',source:{type:'base64',media_type:'application/pdf',data:b}}));
+  if (extraText) docContents.push({type:'text',text:extraText});
+  try {
+    const resp = await fetch(ANTHROPIC_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:'검도 대회 요강에서 정보를 추출해. 반드시 JSON만 반환, 다른 텍스트나 마크다운 없이. 형식: {"name":"대회명","date":"YYYY-MM-DD","place":"장소","fee_individual":개인전참가비숫자,"fee_team":단체전참가비숫자,"deadline":"YYYY-MM-DD","notices":["주의사항1","주의사항2"]}. 날짜는 YYYY-MM-DD 형식. 참가비 없으면 0. 주의사항 없으면 [].',
+        messages:[{role:'user',content:[...docContents,{type:'text',text:'대회 요강 정보를 추출해줘.'}]}]
+      })
+    });
+    const resData = await resp.json();
+    const text = resData.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(text);
+    document.getElementById('t-name').value = parsed.name || '';
+    document.getElementById('t-date').value = parsed.date || '';
+    document.getElementById('t-deadline').value = parsed.deadline || '';
+    document.getElementById('t-place').value = parsed.place || '';
+    document.getElementById('t-fee-ind').value = parsed.fee_individual || '';
+    document.getElementById('t-fee-team').value = parsed.fee_team || '';
+    document.getElementById('t-notices').value = (parsed.notices||[]).join('\n');
+    document.getElementById('parsedResult').style.display = 'block';
+    document.getElementById('parsedResult').innerHTML = `
+      <div class="parsed-row"><span class="parsed-key">대회명</span><span class="parsed-val">${parsed.name||'-'}</span></div>
+      <div class="parsed-row"><span class="parsed-key">개최일</span><span class="parsed-val">${parsed.date||'-'}</span></div>
+      <div class="parsed-row"><span class="parsed-key">장소</span><span class="parsed-val">${parsed.place||'-'}</span></div>
+      <div class="parsed-row"><span class="parsed-key">개인전 참가비</span><span class="parsed-val">${parsed.fee_individual?parsed.fee_individual.toLocaleString()+'원':'-'}</span></div>
+      <div class="parsed-row"><span class="parsed-key">단체전 참가비</span><span class="parsed-val">${parsed.fee_team?parsed.fee_team.toLocaleString()+'원':'-'}</span></div>
+      <div class="parsed-row"><span class="parsed-key">접수 마감</span><span class="parsed-val">${parsed.deadline||'-'}</span></div>
+    `;
+    zone.classList.add('has-file');
+    zone.innerHTML = `<div style="font-size:20px;margin-bottom:4px">✓</div><div style="font-weight:500">분석 완료!</div>`;
+  } catch(e) {
+    zone.innerHTML = `<div style="font-size:20px;margin-bottom:4px">📄</div><div>분석 실패 - 다시 시도해주세요</div>`;
+    console.error(e);
+  }
+}
 
 async function handlePDF(input) {
   const files = Array.from(input.files);
