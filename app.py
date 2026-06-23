@@ -211,6 +211,10 @@ def export_csv(tid):
         headers={'Content-Disposition': f'attachment; filename="{tname}_신청현황.csv"'}
     )
 
+@app.route('/api/config')
+def get_config():
+    return jsonify({'apiKey': os.environ.get('ANTHROPIC_API_KEY', '')})
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
