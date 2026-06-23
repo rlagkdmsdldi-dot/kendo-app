@@ -267,7 +267,7 @@ async function checkAuth() {
 async function doLogin() {
   const pw = document.getElementById('loginPw').value;
   const res = await fetch('/api/admin/login', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
     body: JSON.stringify({password:pw})
   });
   const data = await res.json();
@@ -351,7 +351,7 @@ async function saveTournament() {
   };
 
   const res = await fetch('/api/tournaments', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
     body: JSON.stringify(payload)
   });
   const data = await res.json();
@@ -385,7 +385,7 @@ async function handlePDF(input) {
   try {
     const resp = await fetch(ANTHROPIC_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:1000,
@@ -492,7 +492,7 @@ async function getTeamSuggestion() {
   try {
     const resp = await fetch(ANTHROPIC_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:1000,
