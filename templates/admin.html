@@ -370,8 +370,9 @@ async function saveTournament() {
 // ── PDF 파싱 ──────────────────────────────────────────────
 
 async function handlePDF(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const file = files[0];
   const zone = document.getElementById('uploadZone');
   zone.innerHTML = `<div style="font-size:24px;margin-bottom:8px">⏳</div><div>PDF 분석 중...</div>`;
 
@@ -382,6 +383,16 @@ async function handlePDF(input) {
     r.readAsDataURL(file);
   });
 
+  const toBase64 = f => new Promise((res,rej) => {
+    const r2=new FileReader();
+    r2.onload=()=>res(r2.result.split(',')[1]);
+    r2.onerror=()=>rej(new Error('읽기 실패'));
+    r2.readAsDataURL(f);
+  });
+  const allFiles = Array.from(input.files);
+  const allBase64 = await Promise.all(allFiles.map(toBase64));
+  const docContents = allBase64.map(b => ({type:'document',source:{type:'base64',media_type:'application/pdf',data:b}}));
+
   try {
     const resp = await fetch(ANTHROPIC_URL, {
       method:'POST',
@@ -391,7 +402,7 @@ async function handlePDF(input) {
         max_tokens:1000,
         system:'검도 대회 요강 PDF에서 정보를 추출해. 반드시 JSON만 반환, 다른 텍스트나 마크다운 없이. 형식: {"name":"대회명","date":"YYYY-MM-DD","place":"장소","fee_individual":개인전참가비숫자,"fee_team":단체전참가비숫자,"deadline":"YYYY-MM-DD","notices":["주의사항1","주의사항2"]}. 날짜는 YYYY-MM-DD 형식. 참가비 없으면 0. 주의사항 없으면 [].',
         messages:[{role:'user',content:[
-          {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+          ...docContents,
           {type:'text',text:'대회 요강 정보를 추출해줘.'}
         ]}]
       })
